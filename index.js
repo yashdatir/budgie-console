@@ -31,7 +31,7 @@ class BudgieCLIIO {
 		return console.log(props.join(''), this.Reset);
 	};
 
-	spinner = function (type, followingText, speed, status = () => true) {
+	spinner = function (type = this.spin, followingText = '', speed = 100, status = () => true) {
 		var x = 0;
 		const reset = this.Reset;
 		var spin = setInterval(function () {
