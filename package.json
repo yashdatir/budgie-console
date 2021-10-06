@@ -4,7 +4,7 @@
   "description": "budgie-console is a node console utility. It adds styling and color to a boring console logs, apart from console styling, it also has capability to add a spinner with auto stop capability using a status variable. ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node Console.test.js"
   },
   "keywords": [
     "node",
