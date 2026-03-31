@@ -25,39 +25,39 @@ class BudgieCLIIO {
   }
 
   // Styles
-  Reset      = '\x1b[0m';
-  Bright     = '\x1b[1m';
-  Dim        = '\x1b[2m';
-  Underscore = '\x1b[4m';
-  Blink      = '\x1b[5m';
-  Reverse    = '\x1b[7m';
-  Hidden     = '\x1b[8m';
+  Reset     :string = '\x1b[0m';
+  Bright    :string = '\x1b[1m';
+  Dim       :string = '\x1b[2m';
+  Underscore:string = '\x1b[4m';
+  Blink     :string = '\x1b[5m';
+  Reverse   :string = '\x1b[7m';
+  Hidden    :string = '\x1b[8m';
 
   // Foreground
-  FgBlack   = '\x1b[30m';
-  FgRed     = '\x1b[31m';
-  FgGreen   = '\x1b[32m';
-  FgYellow  = '\x1b[33m';
-  FgBlue    = '\x1b[34m';
-  FgMagenta = '\x1b[35m';
-  FgCyan    = '\x1b[36m';
-  FgWhite   = '\x1b[37m';
+  FgBlack  :string = '\x1b[30m';
+  FgRed    :string = '\x1b[31m';
+  FgGreen  :string = '\x1b[32m';
+  FgYellow :string = '\x1b[33m';
+  FgBlue   :string = '\x1b[34m';
+  FgMagenta:string = '\x1b[35m';
+  FgCyan   :string = '\x1b[36m';
+  FgWhite  :string = '\x1b[37m';
 
   // Background
-  BgBlack   = '\x1b[40m';
-  BgRed     = '\x1b[41m';
-  BgGreen   = '\x1b[42m';
-  BgYellow  = '\x1b[43m';
-  BgBlue    = '\x1b[44m';
-  BgMagenta = '\x1b[45m';
-  BgCyan    = '\x1b[46m';
-  BgWhite   = '\x1b[47m';
+  BgBlack  :string = '\x1b[40m';
+  BgRed    :string = '\x1b[41m';
+  BgGreen  :string = '\x1b[42m';
+  BgYellow :string = '\x1b[43m';
+  BgBlue   :string = '\x1b[44m';
+  BgMagenta:string = '\x1b[45m';
+  BgCyan   :string = '\x1b[46m';
+  BgWhite  :string = '\x1b[47m';
 
   // Default spinner frames
-  spin = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  spin:Array<string> = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
   // Core
-  log = (...props) => {
+  log = (...props: Array<string>) => {
     process.stdout.write(props.join('') + this.Reset + '\n');
   };
 
@@ -66,10 +66,10 @@ class BudgieCLIIO {
   };
 
   // Log levels
-  success = (msg) => this.log(`${this.FgGreen}✔  ${msg}`);
-  error   = (msg) => this.log(`${this.FgRed}✖  ${msg}`);
-  warn    = (msg) => this.log(`${this.FgYellow}⚠  ${msg}`);
-  info    = (msg) => this.log(`${this.FgCyan}ℹ  ${msg}`);
+  success = (msg: string) => this.log(`${this.FgGreen}✔  ${msg}`);
+  error   = (msg: string) => this.log(`${this.FgRed}✖  ${msg}`);
+  warn    = (msg: string) => this.log(`${this.FgYellow}⚠  ${msg}`);
+  info    = (msg: string) => this.log(`${this.FgCyan}ℹ  ${msg}`);
 
   // Divider
   divider = (char = '─', length = 40, color = this.Dim) => {
@@ -77,7 +77,7 @@ class BudgieCLIIO {
   };
 
   // Box
-  box = (text, color = this.FgCyan) => {
+  box = (text: string, color: string = this.FgCyan) => {
     const pad   = 2;
     const width = text.length + pad * 2;
     const line  = '─'.repeat(width);
@@ -87,7 +87,7 @@ class BudgieCLIIO {
   };
 
   // Progress bar
-  progress = (current, total, width = 30, color = this.FgGreen, doneMessage = '') => {
+  progress = (current: number, total: number, width: number = 30, color: string = this.FgGreen, doneMessage: string = '') => {
     const pct    = Math.min(current / total, 1);
     const filled = Math.round(pct * width);
     const bar    = '█'.repeat(filled) + '░'.repeat(width - filled);
@@ -113,11 +113,11 @@ class BudgieCLIIO {
   };
 
   // Table
-  table = (rows, headers = null) => {
+  table = (rows: Array<Array<string>>, headers: Array<string> | null = null) => {
     const data    = headers ? [headers, ...rows] : rows;
     const widths  = data[0].map((_, i) => Math.max(...data.map(r => String(r[i]).length)));
-    const rowStr  = (r) => '│ ' + r.map((cell, i) => String(cell).padEnd(widths[i])).join(' │ ') + ' │';
-    const divLine = (l, m, r) => l + widths.map(w => '─'.repeat(w + 2)).join(m) + r;
+    const rowStr  = (r: Array<string>) => '│ ' + r.map((cell, i) => String(cell).padEnd(widths[i])).join(' │ ') + ' │';
+    const divLine = (l: string, m: string, r: string) => l + widths.map(w => '─'.repeat(w + 2)).join(m) + r;
 
     this.log(this.FgCyan + divLine('┌', '┬', '┐'));
     if (headers) {
@@ -131,11 +131,11 @@ class BudgieCLIIO {
   };
 
   // Prompt
-  prompt = (question) => {
+  prompt = (question: string) => {
     const readline = require('readline');
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     return new Promise(resolve => {
-      rl.question(`${this.FgYellow}${question}${this.Reset} `, answer => {
+      rl.question(`${this.FgYellow}${question}${this.Reset} `, (answer: string) => {
         rl.close();
         resolve(answer);
       });
@@ -144,5 +144,6 @@ class BudgieCLIIO {
 
 }
 
-const Console = new BudgieCLIIO();
-module.exports = Console;
+const Console: BudgieCLIIO = new BudgieCLIIO();
+
+export default Console;
