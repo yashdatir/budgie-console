@@ -63,13 +63,16 @@ class BudgieCLIIO {
   };
 
   // Progress bar
-  progress = (current, total, width = 30, color = this.FgGreen) => {
+  progress = (current, total, width = 30, color = this.FgGreen, doneMessage = '') => {
     const pct    = Math.min(current / total, 1);
     const filled = Math.round(pct * width);
     const bar    = '█'.repeat(filled) + '░'.repeat(width - filled);
     const label  = `${Math.round(pct * 100)}%`;
     process.stdout.write(`\r${color}[${bar}]${this.Reset} ${label}  `);
-    if (current >= total) process.stdout.write('\n');
+    if (current >= total) {
+      process.stdout.write('\n');
+      if (doneMessage) this.success(doneMessage);
+    }
   };
 
   // Spinner
