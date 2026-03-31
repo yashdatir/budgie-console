@@ -1,5 +1,29 @@
 class BudgieCLIIO {
 
+  constructor() {
+    this.detectAnsi();
+  }
+
+  detectAnsi = () => {
+    const isTermDumb = process.env.TERM === 'dumb';
+    const isNoColor = process.env.NO_COLOR !== undefined;
+
+    if (isTermDumb || isNoColor) {
+      this.disableColors();
+    }
+  }
+
+  disableColors = () => {
+    const properties = [
+      'Reset', 'Bright', 'Dim', 'Underscore', 'Blink', 'Reverse', 'Hidden',
+      'FgBlack', 'FgRed', 'FgGreen', 'FgYellow', 'FgBlue', 'FgMagenta', 'FgCyan', 'FgWhite',
+      'BgBlack', 'BgRed', 'BgGreen', 'BgYellow', 'BgBlue', 'BgMagenta', 'BgCyan', 'BgWhite'
+    ];
+    properties.forEach(prop => {
+      this[prop] = '';
+    });
+  }
+
   // Styles
   Reset     :string = '\x1b[0m';
   Bright    :string = '\x1b[1m';
