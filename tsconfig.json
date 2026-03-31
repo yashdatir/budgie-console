@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs", // or "ESNext" if using modern bundlers
+    "strict": true,
+    "allowJs": true,      // ✅ allows existing JS files
+    "checkJs": false,     // optional: type-check JS files
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "types": ["node"], // ✅ include Node.js types
+    "declaration": true,
+  },
+  "include": ["./**/*"]
+}
