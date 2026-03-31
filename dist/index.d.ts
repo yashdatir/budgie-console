@@ -1,4 +1,22 @@
 declare class BudgieCLIIO {
+    /**
+     * Detect if ANSI colors should be disabled based on environment variables.
+     * If the terminal is 'dumb' or NO_COLOR is set, disable colors.
+     * This ensures compatibility with environments that don't support ANSI codes.
+     */
+    constructor();
+    /**
+     * Checks environment variables to determine if ANSI colors should be disabled.
+     * If the terminal is 'dumb' or NO_COLOR is set, it calls disableColors to turn off ANSI codes.
+     * This method is called during initialization to ensure the console behaves correctly in various environments.
+     */
+    detectAnsi: () => void;
+    /**
+     * Disables ANSI color codes by setting all style and color properties to empty strings.
+     * This method is called when the environment indicates that colors should not be used.
+     * It ensures that all methods that rely on these properties will output plain text without ANSI codes.
+     */
+    disableColors: () => void;
     Reset: string;
     Bright: string;
     Dim: string;
@@ -37,4 +55,4 @@ declare class BudgieCLIIO {
     prompt: (question: string) => Promise<unknown>;
 }
 declare const Console: BudgieCLIIO;
-export default Console;
+export = Console;

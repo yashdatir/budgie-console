@@ -1,9 +1,23 @@
-class BudgieCLIIO {
+type ColorKeys =
+  | 'Reset' | 'Bright' | 'Dim' | 'Underscore' | 'Blink' | 'Reverse' | 'Hidden'
+  | 'FgBlack' | 'FgRed' | 'FgGreen' | 'FgYellow' | 'FgBlue' | 'FgMagenta' | 'FgCyan' | 'FgWhite'
+  | 'BgBlack' | 'BgRed' | 'BgGreen' | 'BgYellow' | 'BgBlue' | 'BgMagenta' | 'BgCyan' | 'BgWhite';
 
+class BudgieCLIIO {
+  /**
+   * Detect if ANSI colors should be disabled based on environment variables.
+   * If the terminal is 'dumb' or NO_COLOR is set, disable colors.
+   * This ensures compatibility with environments that don't support ANSI codes.
+   */
   constructor() {
     this.detectAnsi();
   }
 
+  /**
+   * Checks environment variables to determine if ANSI colors should be disabled.
+   * If the terminal is 'dumb' or NO_COLOR is set, it calls disableColors to turn off ANSI codes.
+   * This method is called during initialization to ensure the console behaves correctly in various environments.
+   */
   detectAnsi = () => {
     const isTermDumb = process.env.TERM === 'dumb';
     const isNoColor = process.env.NO_COLOR !== undefined;
@@ -13,13 +27,18 @@ class BudgieCLIIO {
     }
   }
 
+  /**
+   * Disables ANSI color codes by setting all style and color properties to empty strings.
+   * This method is called when the environment indicates that colors should not be used.
+   * It ensures that all methods that rely on these properties will output plain text without ANSI codes.
+   */
   disableColors = () => {
-    const properties = [
+    const properties: Array<ColorKeys> = [
       'Reset', 'Bright', 'Dim', 'Underscore', 'Blink', 'Reverse', 'Hidden',
       'FgBlack', 'FgRed', 'FgGreen', 'FgYellow', 'FgBlue', 'FgMagenta', 'FgCyan', 'FgWhite',
       'BgBlack', 'BgRed', 'BgGreen', 'BgYellow', 'BgBlue', 'BgMagenta', 'BgCyan', 'BgWhite'
     ];
-    properties.forEach(prop => {
+    properties.forEach((prop: ColorKeys) => {
       this[prop] = '';
     });
   }
@@ -144,6 +163,5 @@ class BudgieCLIIO {
 
 }
 
-const Console: BudgieCLIIO = new BudgieCLIIO();
-
-export default Console;
+const Console = new BudgieCLIIO();
+export = Console;
