@@ -1,11 +1,13 @@
 {
   "name": "budgie-console",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A lightweight Node.js console utility for colored output, spinners, progress bars, tables and more.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/Console.test.js"
   ],
   "exports": {
     ".": {
@@ -15,9 +17,9 @@
     }
   },
   "scripts": {
-    "test": "node test.js",
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "test": "node dist/Console.test.js",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc"
   },
   "keywords": [
     "cli",
@@ -47,6 +49,6 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "budgie-console": "file:budgie-console-1.1.0.tgz"
+    "budgie-console": "file:budgie-console-1.1.1.tgz"
   }
 }

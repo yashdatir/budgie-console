@@ -1,4 +1,4 @@
-const Console = require('./index');
+const Console = require('../dist/index.js');
 
 // ─── Header ───────────────────────────────────────────────
 Console.clear();

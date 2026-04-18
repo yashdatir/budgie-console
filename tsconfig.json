@@ -7,9 +7,11 @@
     "checkJs": false,     // optional: type-check JS files
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "rootDir": "./src",
     "outDir": "dist",
     "types": ["node"], // ✅ include Node.js types
     "declaration": true,
   },
-  "include": ["./**/*"]
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

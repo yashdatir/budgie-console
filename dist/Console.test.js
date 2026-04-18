@@ -1,5 +1,5 @@
 "use strict";
-const Console = require('./index');
+const Console = require('../dist/index.js');
 // ─── Header ───────────────────────────────────────────────
 Console.clear();
 Console.box('Welcome to Budgie JS — Extended Test', Console.FgCyan);

@@ -9,7 +9,6 @@ class BudgieCLIIO {
         /**
          * Checks environment variables to determine if ANSI colors should be disabled.
          * If the terminal is 'dumb' or NO_COLOR is set, it calls disableColors to turn off ANSI codes.
-         * This method is called during initialization to ensure the console behaves correctly in various environments.
          */
         this.detectAnsi = () => {
             const isTermDumb = process.env.TERM === 'dumb';
@@ -20,8 +19,6 @@ class BudgieCLIIO {
         };
         /**
          * Disables ANSI color codes by setting all style and color properties to empty strings.
-         * This method is called when the environment indicates that colors should not be used.
-         * It ensures that all methods that rely on these properties will output plain text without ANSI codes.
          */
         this.disableColors = () => {
             const properties = [
@@ -87,6 +84,8 @@ class BudgieCLIIO {
             this.log(`${color}└${line}┘`);
         };
         // Progress bar
+        // Fix #11: prints a newline on completion so subsequent output starts on a fresh line.
+        //          Optional doneMessage is shown as a success line after the bar completes.
         this.progress = (current, total, width = 30, color = this.FgGreen, doneMessage = '') => {
             const pct = Math.min(current / total, 1);
             const filled = Math.round(pct * width);
@@ -100,23 +99,30 @@ class BudgieCLIIO {
             }
         };
         // Spinner
-        this.spinner = (type = this.spin, followingText = '', speed = 100, status = () => true) => {
+        // Fix #10: added doneMessage param. When statusFn returns false the spinner line is
+        //          cleared and—if doneMessage is provided—a success line is printed in its place,
+        //          eliminating the race-condition workaround of calling Console.success() manually.
+        this.spinner = (type = this.spin, followingText = '', speed = 100, status = () => true, doneMessage = '') => {
             let x = 0;
             const id = setInterval(() => {
                 process.stdout.write(`\r${this.FgCyan}${type[x++ % type.length]}${this.Reset} ${followingText}`);
                 if (!status()) {
                     clearInterval(id);
                     process.stdout.write('\r' + ' '.repeat(followingText.length + 4) + '\r');
+                    if (doneMessage)
+                        this.success(doneMessage);
                 }
             }, speed);
             return () => clearInterval(id);
         };
         // Table
+        // Fix #12: String(cell) coercion already present for cell values and width calculation,
+        //          so numbers, booleans, null, and undefined are all handled safely.
         this.table = (rows, headers = null) => {
             const data = headers ? [headers, ...rows] : rows;
-            const widths = data[0].map((_, i) => Math.max(...data.map(r => String(r[i]).length)));
+            const widths = data[0].map((_, i) => Math.max(...data.map((r) => String(r[i]).length)));
             const rowStr = (r) => '│ ' + r.map((cell, i) => String(cell).padEnd(widths[i])).join(' │ ') + ' │';
-            const divLine = (l, m, r) => l + widths.map(w => '─'.repeat(w + 2)).join(m) + r;
+            const divLine = (l, m, r) => l + widths.map((w) => '─'.repeat(w + 2)).join(m) + r;
             this.log(this.FgCyan + divLine('┌', '┬', '┐'));
             if (headers) {
                 this.log(this.Bright + this.FgWhite + rowStr(headers));
@@ -138,6 +144,121 @@ class BudgieCLIIO {
                     resolve(answer);
                 });
             });
+        };
+        // Fix #13: Console.tree(obj) — pretty-print nested objects/arrays with branch characters,
+        //          similar to the Unix `tree` command. Useful for debugging config objects or ASTs.
+        this.tree = (obj, label = 'root', prefix = '', isLast = true) => {
+            const connector = isLast ? '└── ' : '├── ';
+            const valueStr = (v) => {
+                if (v === null)
+                    return `${this.FgYellow}null${this.Reset}`;
+                if (v === undefined)
+                    return `${this.FgYellow}undefined${this.Reset}`;
+                if (typeof v === 'boolean')
+                    return `${this.FgYellow}${v}${this.Reset}`;
+                if (typeof v === 'number')
+                    return `${this.FgCyan}${v}${this.Reset}`;
+                if (typeof v === 'string')
+                    return `${this.FgGreen}"${v}"${this.Reset}`;
+                return '';
+            };
+            const isObject = obj !== null && typeof obj === 'object';
+            const labelStr = `${this.Bright}${label}${this.Reset}`;
+            if (!isObject) {
+                process.stdout.write(`${prefix}${connector}${labelStr}: ${valueStr(obj)}\n`);
+                return;
+            }
+            process.stdout.write(`${prefix}${connector}${this.FgMagenta}${label}${this.Reset}\n`);
+            const childPrefix = prefix + (isLast ? '    ' : '│   ');
+            const keys = Object.keys(obj);
+            keys.forEach((key, idx) => {
+                this.tree(obj[key], key, childPrefix, idx === keys.length - 1);
+            });
+        };
+        // Fix #14: Console.diff(oldStr, newStr) — line-by-line colored diff with no external deps.
+        //          Removed lines are shown in red with "- " prefix, added lines in green with "+ ",
+        //          and unchanged lines are shown dimmed. Great for config change summaries.
+        this.diff = (oldStr, newStr) => {
+            const oldLines = oldStr.split('\n');
+            const newLines = newStr.split('\n');
+            const maxLen = Math.max(oldLines.length, newLines.length);
+            // Build a simple LCS-based diff using a two-pointer greedy approach:
+            // Walk both line arrays and mark removals (-) and additions (+).
+            const oldSet = new Set(oldLines);
+            const newSet = new Set(newLines);
+            let oi = 0, ni = 0;
+            while (oi < oldLines.length || ni < newLines.length) {
+                const ol = oldLines[oi];
+                const nl = newLines[ni];
+                if (oi >= oldLines.length) {
+                    // Only new lines left
+                    process.stdout.write(`${this.FgGreen}+ ${nl}${this.Reset}\n`);
+                    ni++;
+                }
+                else if (ni >= newLines.length) {
+                    // Only old lines left
+                    process.stdout.write(`${this.FgRed}- ${ol}${this.Reset}\n`);
+                    oi++;
+                }
+                else if (ol === nl) {
+                    // Matching line
+                    process.stdout.write(`${this.Dim}  ${ol}${this.Reset}\n`);
+                    oi++;
+                    ni++;
+                }
+                else if (!newSet.has(ol)) {
+                    // Old line was removed
+                    process.stdout.write(`${this.FgRed}- ${ol}${this.Reset}\n`);
+                    oi++;
+                }
+                else if (!oldSet.has(nl)) {
+                    // New line was added
+                    process.stdout.write(`${this.FgGreen}+ ${nl}${this.Reset}\n`);
+                    ni++;
+                }
+                else {
+                    // Both exist somewhere — treat as removal + addition at this position
+                    process.stdout.write(`${this.FgRed}- ${ol}${this.Reset}\n`);
+                    process.stdout.write(`${this.FgGreen}+ ${nl}${this.Reset}\n`);
+                    oi++;
+                    ni++;
+                }
+            }
+        };
+        // Fix #15: Console.notify(title, message) — sends a native OS desktop notification.
+        //          Uses osascript on macOS, notify-send on Linux, and msg on Windows.
+        //          No external dependencies; shells out via Node's child_process.
+        this.notify = (title, message) => {
+            const { execSync } = require('child_process');
+            const platform = process.platform;
+            try {
+                if (platform === 'darwin') {
+                    const escaped = (s) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                    execSync(`osascript -e 'display notification "${escaped(message)}" with title "${escaped(title)}"'`);
+                }
+                else if (platform === 'linux') {
+                    const escaped = (s) => s.replace(/"/g, '\\"');
+                    execSync(`notify-send "${escaped(title)}" "${escaped(message)}"`);
+                }
+                else if (platform === 'win32') {
+                    // Windows: use PowerShell's BurntToast-style balloon via Msg
+                    const escaped = (s) => s.replace(/"/g, '\\"');
+                    execSync(`powershell -Command "` +
+                        `Add-Type -AssemblyName System.Windows.Forms; ` +
+                        `$n = New-Object System.Windows.Forms.NotifyIcon; ` +
+                        `$n.Icon = [System.Drawing.SystemIcons]::Information; ` +
+                        `$n.BalloonTipTitle = '${escaped(title)}'; ` +
+                        `$n.BalloonTipText = '${escaped(message)}'; ` +
+                        `$n.Visible = $true; ` +
+                        `$n.ShowBalloonTip(3000)"`);
+                }
+                else {
+                    this.warn(`notify: unsupported platform '${platform}'`);
+                }
+            }
+            catch (_a) {
+                this.warn(`notify: failed to send notification (is notify-send/osascript available?)`);
+            }
         };
         this.detectAnsi();
     }
